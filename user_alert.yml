@@ -1,9 +1,8 @@
 ---
-- name: Alert Windows user with a message
+- name: Alert Windows user with a message asynchronously
   hosts: windows
   gather_facts: no
   tasks:
-    - name: Send popup message using PowerShell
+    - name: Launch popup message in background
       win_shell: |
-        Add-Type -AssemblyName PresentationFramework
-        [System.Windows.MessageBox]::Show('This is Ansible speaking!', 'Ansible Alert')
+        Start-Process powershell -ArgumentList "-NoProfile -WindowStyle Hidden -Command `"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('This is Ansible speaking!', 'Ansible Alert')`""
