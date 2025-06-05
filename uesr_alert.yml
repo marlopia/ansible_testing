@@ -1,0 +1,15 @@
+---
+- name: Display alert to user about Downloads folder
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Show alert message with PowerShell
+      win_shell: |
+        [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
+        [System.Windows.Forms.MessageBox]::Show(
+          "⚠️ Your Downloads folder will be emptied tonight.\nPlease save all relevant documents to another location.",
+          "IMPORTANT NOTICE",
+          'OK',
+          'Warning'
+        )
