@@ -1,8 +1,9 @@
 ---
-- name: Alert Windows user with a message asynchronously
+- name: Alert Windows user with msg.exe
   hosts: windows
   gather_facts: no
   tasks:
-    - name: Launch popup message in background
+    - name: Send console message to logged in user
       win_shell: |
-        Start-Process powershell -ArgumentList "-NoProfile -WindowStyle Hidden -Command `"Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('This is Ansible speaking!', 'Ansible Alert')`""
+        $username = (query user | Select-String "Active").ToString().Split(' ')[0]
+        msg $username "This is Ansible speaking!"
