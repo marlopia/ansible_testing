@@ -1,0 +1,27 @@
+---
+- name: Cleanly uninstall VLC using Chocolatey
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Uninstall VLC via Chocolatey
+      win_chocolatey:
+        name: vlc
+        state: absent
+
+    - name: Remove leftover VLC folders (Program Files)
+      win_file:
+        path: 'C:\Program Files\VideoLAN'
+        state: absent
+
+    - name: Remove VLC user config (current user)
+      win_file:
+        path: 'C:\Users\{{ ansible_user }}\AppData\Roaming\vlc'
+        state: absent
+        ignore_errors: yes
+
+    - name: Remove VLC user cache (current user)
+      win_file:
+        path: 'C:\Users\{{ ansible_user }}\AppData\Local\vlc'
+        state: absent
+        ignore_errors: yes
