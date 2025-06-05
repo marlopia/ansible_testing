@@ -1,15 +1,36 @@
 ---
-- name: Display alert to user about Downloads folder
+- name: Show alert now or queue it for next login (with cleanup)
   hosts: windows
-  gather_facts: no
+  gather_facts: yes
+
+  vars:
+    task_name: AlertDownloadsCleanup
 
   tasks:
-    - name: Show alert message with PowerShell
+
+    - name: Check if a user is logged in
+      win_shell: query user
+      register: query_user
+      ignore_errors: yes
+
+    - name: Set fact if user is logged in
+      set_fact:
+        user_logged_in: "{{ 'Active' in query_user.stdout }}"
+      when: query_user.rc == 0
+
+    - name: Show alert to logged-in user
+      win_shell: msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
+      when: user_logged_in | default(false)
+
+    - name: Create a one-time login alert task with self-delete
       win_shell: |
-        [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
-        [System.Windows.Forms.MessageBox]::Show(
-          "⚠️ Your Downloads folder will be emptied tonight.\nPlease save all relevant documents to another location.",
-          "IMPORTANT NOTICE",
-          'OK',
-          'Warning'
-        )
+        $taskName = "{{ task_name }}"
+        $script = @"
+        msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
+        schtasks /delete /f /tn "$taskName"
+"@
+        $path = "C:\Temp\alert_msg.ps1"
+        $script | Out-File -Encoding ASCII -FilePath $path
+
+        schtasks /create /tn "$taskName" /tr "powershell.exe -ExecutionPolicy Bypass -File $path" /sc onlogon /rl highest /f
+      when: not user_logged_in | default(false)
