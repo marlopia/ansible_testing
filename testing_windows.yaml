@@ -1,0 +1,20 @@
+- name: Set Windows password policy
+  hosts: windows
+  tasks:
+    - name: Set minimum password length
+      win_security_policy:
+        section: System Access
+        key: MinimumPasswordLength
+        value: 12
+
+    - name: Enable password complexity requirements
+      win_security_policy:
+        section: System Access
+        key: PasswordComplexity
+        value: 1
+
+    - name: Set maximum password age to 90 days
+      win_security_policy:
+        section: System Access
+        key: MaximumPasswordAge
+        value: 90
