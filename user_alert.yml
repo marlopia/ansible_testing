@@ -1,37 +1,9 @@
 ---
-- name: Show alert now or queue it for next login (with cleanup)
+- name: Alert Windows user with a message
   hosts: windows
-  gather_facts: yes
-
-  vars:
-    task_name: AlertDownloadsCleanup
-    script_path: 'C:\Temp\alert_msg.ps1'
-
+  gather_facts: no
   tasks:
-
-    - name: Check if a user is logged in
-      win_shell: query user
-      register: query_user
-      ignore_errors: yes
-
-    - name: Set fact if user is logged in
-      set_fact:
-        user_logged_in: "{{ 'Active' in query_user.stdout }}"
-      when: query_user.rc == 0
-
-    - name: Show alert to logged-in user
-      win_shell: msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
-      when: user_logged_in | default(false)
-
-    - name: Create PowerShell script that shows message and deletes scheduled task
-      win_copy:
-        dest: "{{ script_path }}"
-        content: |
-          msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
-          schtasks /delete /f /tn "{{ task_name }}"
-      when: not user_logged_in | default(false)
-
-    - name: Create scheduled task to run alert script on next login
-      win_shell: |
-        schtasks /create /tn "{{ task_name }}" /tr "powershell.exe -ExecutionPolicy Bypass -File '{{ script_path }}'" /sc onlogon /rl highest /f
-      when: not user_logged_in | default(false)
+    - name: Send popup message to Windows user
+      win_message:
+        msg: "This is Ansible speaking!"
+        title: "Ansible Alert"
