@@ -1,0 +1,8 @@
+---
+- name: Ping Windows hosts over WinRM
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Test connectivity with win_ping
+      win_ping:
