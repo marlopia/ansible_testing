@@ -3,7 +3,7 @@
   hosts: windows
   gather_facts: no
   tasks:
-    - name: Send popup message to Windows user
-      win_message:
-        msg: "This is Ansible speaking!"
-        title: "Ansible Alert"
+    - name: Send popup message using PowerShell
+      win_shell: |
+        Add-Type -AssemblyName PresentationFramework
+        [System.Windows.MessageBox]::Show('This is Ansible speaking!', 'Ansible Alert')
