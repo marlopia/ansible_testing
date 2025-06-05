@@ -1,0 +1,15 @@
+---
+- name: Install VLC using Chocolatey
+  hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Ensure Chocolatey is installed
+      win_chocolatey:
+        name: chocolatey
+        state: present
+
+    - name: Ensure VLC is installed via Chocolatey
+      win_chocolatey:
+        name: vlc
+        state: latest
