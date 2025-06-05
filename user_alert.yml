@@ -5,6 +5,7 @@
 
   vars:
     task_name: AlertDownloadsCleanup
+    script_path: 'C:\Temp\alert_msg.ps1'
 
   tasks:
 
@@ -22,15 +23,15 @@
       win_shell: msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
       when: user_logged_in | default(false)
 
-    - name: Create a one-time login alert task with self-delete
-      win_shell: |
-        $taskName = "{{ task_name }}"
-        $script = @"
-        msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
-        schtasks /delete /f /tn "$taskName"
-"@
-        $path = "C:\Temp\alert_msg.ps1"
-        $script | Out-File -Encoding ASCII -FilePath $path
+    - name: Create PowerShell script that shows message and deletes scheduled task
+      win_copy:
+        dest: "{{ script_path }}"
+        content: |
+          msg * /time:60 "⚠️ Your Downloads folder will be emptied tonight. Please save important files elsewhere."
+          schtasks /delete /f /tn "{{ task_name }}"
+      when: not user_logged_in | default(false)
 
-        schtasks /create /tn "$taskName" /tr "powershell.exe -ExecutionPolicy Bypass -File $path" /sc onlogon /rl highest /f
+    - name: Create scheduled task to run alert script on next login
+      win_shell: |
+        schtasks /create /tn "{{ task_name }}" /tr "powershell.exe -ExecutionPolicy Bypass -File '{{ script_path }}'" /sc onlogon /rl highest /f
       when: not user_logged_in | default(false)
