@@ -3,12 +3,14 @@
   hosts: windows
   gather_facts: no
   tasks:
+    - name: Confirm environment variable
+      debug:
+        msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
+
     - name: Send POPUP_MESSAGE to logged in users
       community.windows.win_toast:
         expire: 60
         title: System Upgrade Notification
         msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
-      vars:
-        deployment_start_time: "6:00 PM"
       async: 60
       poll: 0
