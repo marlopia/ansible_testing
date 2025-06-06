@@ -14,9 +14,3 @@
         msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
       async: 60
       poll: 0
-
-    - name: Send message using msg.exe
-      ansible.windows.win_shell: |
-        $session = (query user | Where-Object { $_ -match "Active" }) -split '\s+'
-        $username = $session[0]
-        msg $username "{{ lookup('env', 'POPUP_MESSAGE') }}"
