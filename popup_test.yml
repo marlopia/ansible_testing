@@ -14,3 +14,8 @@
         msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
       async: 60
       poll: 0
+      
+    - name: Win_msg task
+      community.windows.win_msg:
+        display_seconds: 60
+        msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
