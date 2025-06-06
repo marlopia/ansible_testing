@@ -1,32 +1,9 @@
----
-- name: Gather hardware data from all hosts
-  hosts: all
-  gather_facts: yes
-
-  tasks:
-    - name: Extract hardware info
-      set_fact:
-        hw_info:
-          hostname: "{{ inventory_hostname }}"
-          ansible_fqdn: "{{ ansible_facts.fqdn | default('N/A') }}"
-          cpu_cores: "{{ ansible_facts.processor_cores | default('N/A') }}"
-          memory_mb: "{{ ansible_facts.memtotal_mb | default('N/A') }}"
-          disk_size_gb: >-
-            {{
-              (ansible_facts.devices | default({}) | dict2items
-              | selectattr('value.sectors', 'defined')
-              | map(attribute='value.sectors')
-              | map('int')
-              | sum // 2048 // 1024) | default(0)
-            }}
-
 - name: Save CSV on PC-003 desktop
   hosts: PC-003
   gather_facts: no
 
   vars:
-    # Use forward slashes or double backslashes to avoid escaping issues
-    csv_path: "C:/Users/{{ ansible_user }}/Desktop/hardware_report.csv"
+    csv_path: "C:\\Users\\{{ ansible_user }}\\Desktop\\hardware_report.csv"
 
   tasks:
     - name: Collect hw_info from all hosts
@@ -35,7 +12,7 @@
 
     - name: Write hardware info to CSV using PowerShell
       win_shell: |
-        $csvPath = "{{ csv_path }}"
+        $csvPath = '{{ csv_path }}'
         $allData = @(
           {% for item in all_hw_info %}
           [pscustomobject]@{
