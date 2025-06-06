@@ -13,12 +13,11 @@
           memory_mb: "{{ ansible_facts['memtotal_mb'] | default('N/A') }}"
           disk_size_gb: >-
             {{
-              ansible_facts['devices'] 
-              | dict2items 
-              | selectattr('value.sectors', 'defined') 
-              | map(attribute='value.sectors') 
-              | map('int') 
-              | sum // 2048 // 1024
+              (ansible_facts['devices'] | default({}) | dict2items
+              | selectattr('value.sectors', 'defined')
+              | map(attribute='value.sectors')
+              | map('int')
+              | sum // 2048 // 1024) | default(0)
             }}
 
 - name: Save CSV on target host's desktop
