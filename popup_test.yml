@@ -15,11 +15,6 @@
       async: 60
       poll: 0
 
-    - name: Display full-screen popup using PowerShell
-      ansible.windows.win_shell: |
-        Add-Type -AssemblyName PresentationFramework
-        [System.Windows.MessageBox]::Show("{{ lookup('env', 'POPUP_MESSAGE') }}", "System Upgrade Notice", 'OK', 'Warning')
-
     - name: Send message using msg.exe
       ansible.windows.win_shell: |
         $session = (query user | Where-Object { $_ -match "Active" }) -split '\s+'
