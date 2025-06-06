@@ -35,7 +35,7 @@
 
     - name: Write hardware info to CSV using PowerShell
       win_shell: |
-        param([string]$csvPath)
+        $csvPath = "{{ csv_path }}"
         $allData = @(
           {% for item in all_hw_info %}
           [pscustomobject]@{
@@ -51,5 +51,3 @@
         $allData | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
       args:
         executable: powershell.exe
-        argv:
-          - "{{ csv_path }}"
