@@ -24,7 +24,7 @@
   hosts: PC-003
   gather_facts: no
   vars:
-    csv_path: "/home/{{ ansible_user }}/Desktop/hardware_report.csv"
+    csv_path: "C:\\Users\\{{ ansible_user }}\\Desktop\\hardware_report.csv"
 
   tasks:
     - name: Collect hw_info from all hosts
