@@ -1,0 +1,7 @@
+- name: Warn logged in users of impending upgrade (from Semaphore variable)
+  community.windows.win_toast:
+    expire: 60
+    title: System Upgrade Notification
+    msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
+  async: 60
+  poll: 0
