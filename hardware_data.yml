@@ -2,43 +2,48 @@
 - name: Gather hardware data from all hosts
   hosts: all
   gather_facts: yes
-
   tasks:
     - name: Extract hardware info
       set_fact:
         hw_info: 
           hostname: "{{ inventory_hostname }}"
-          ansible_fqdn: "{{ ansible_facts['fqdn'] }}"
-          cpu_cores: "{{ ansible_facts['processor_cores'] | default('N/A') }}"
-          memory_mb: "{{ ansible_facts['memtotal_mb'] | default('N/A') }}"
+          ansible_fqdn: "{{ ansible_facts.fqdn | default('N/A') }}"
+          cpu_cores: "{{ ansible_facts.processor_cores | default('N/A') }}"
+          memory_mb: "{{ ansible_facts.memtotal_mb | default('N/A') }}"
           disk_size_gb: >-
             {{
-              (ansible_facts['devices'] | default({}) | dict2items
+              (ansible_facts.devices | default({}) | dict2items
               | selectattr('value.sectors', 'defined')
               | map(attribute='value.sectors')
               | map('int')
               | sum // 2048 // 1024) | default(0)
             }}
 
-- name: Save CSV on target host's desktop
+- name: Save CSV on PC-003 desktop
   hosts: PC-003
   gather_facts: no
   vars:
     csv_path: "C:\\Users\\{{ ansible_user }}\\Desktop\\hardware_report.csv"
-
   tasks:
     - name: Collect hw_info from all hosts
       set_fact:
         all_hw_info: "{{ groups['all'] | map('extract', hostvars, 'hw_info') | list }}"
 
-    - name: Write CSV header on desktop
-      copy:
-        dest: "{{ csv_path }}"
-        content: "hostname,ansible_fqdn,cpu_cores,memory_mb,disk_size_gb\n"
-
-    - name: Append hardware info to CSV
-      lineinfile:
-        path: "{{ csv_path }}"
-        line: "{{ item.hostname }},{{ item.ansible_fqdn }},{{ item.cpu_cores }},{{ item.memory_mb }},{{ item.disk_size_gb }}"
-        insertafter: EOF
-      loop: "{{ all_hw_info }}"
+    - name: Write hardware info to CSV using PowerShell
+      win_shell: |
+        $csvPath = "{{ csv_path }}"
+        $allData = @(
+          {% for item in all_hw_info %}
+          [pscustomobject]@{
+            Hostname = '{{ item.hostname }}'
+            FQDN = '{{ item.ansible_fqdn }}'
+            CPUCores = '{{ item.cpu_cores }}'
+            MemoryMB = '{{ item.memory_mb }}'
+            DiskSizeGB = '{{ item.disk_size_gb }}'
+          }
+          {% if not loop.last %}, {% endif %}
+          {% endfor %}
+        )
+        $allData | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
+      args:
+        executable: powershell.exe
