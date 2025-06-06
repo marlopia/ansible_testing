@@ -2,10 +2,11 @@
 - name: Gather hardware data from all hosts
   hosts: all
   gather_facts: yes
+
   tasks:
     - name: Extract hardware info
       set_fact:
-        hw_info: 
+        hw_info:
           hostname: "{{ inventory_hostname }}"
           ansible_fqdn: "{{ ansible_facts.fqdn | default('N/A') }}"
           cpu_cores: "{{ ansible_facts.processor_cores | default('N/A') }}"
@@ -22,8 +23,11 @@
 - name: Save CSV on PC-003 desktop
   hosts: PC-003
   gather_facts: no
+
   vars:
-    csv_path: "C:\\Users\\{{ ansible_user }}\\Desktop\\hardware_report.csv"
+    # Use forward slashes or double backslashes to avoid escaping issues
+    csv_path: "C:/Users/{{ ansible_user }}/Desktop/hardware_report.csv"
+
   tasks:
     - name: Collect hw_info from all hosts
       set_fact:
@@ -31,7 +35,7 @@
 
     - name: Write hardware info to CSV using PowerShell
       win_shell: |
-        $csvPath = "{{ csv_path }}"
+        param([string]$csvPath)
         $allData = @(
           {% for item in all_hw_info %}
           [pscustomobject]@{
@@ -47,3 +51,5 @@
         $allData | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
       args:
         executable: powershell.exe
+        argv:
+          - "{{ csv_path }}"
