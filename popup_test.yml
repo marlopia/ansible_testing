@@ -10,7 +10,7 @@
     - name: Send POPUP_MESSAGE to logged in users
       community.windows.win_toast:
         expire: 60
-        title: {{ lookup('env', 'POPUP_TITLE') }}
+        title: "{{ lookup('env', 'POPUP_TITLE') }}"
         msg: "{{ lookup('env', 'POPUP_MESSAGE') }}"
       async: 60
       poll: 0
