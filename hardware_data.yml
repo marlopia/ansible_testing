@@ -36,11 +36,11 @@
     - name: Crear carpeta local para guardar info hardware
       local_action:
         module: file
-        path: "./hardware_info"
+        path: "/home/semaphore/hardware_info"
         state: directory
 
     - name: Guardar JSON completo en master
       copy:
         content: "{{ hardware_info }}"
-        dest: "./hardware_info/{{ inventory_hostname }}_hardware.json"
+        dest: "/home/semaphore/hardware_info/{{ inventory_hostname }}_hardware.json"
       delegate_to: localhost
