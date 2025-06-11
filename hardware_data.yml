@@ -1,52 +1,46 @@
 ---
-- name: Gather hardware data from all hosts
-  hosts: all
-  gather_facts: yes
-
-  tasks:
-    - name: Extract hardware info
-      set_fact:
-        hw_info:
-          hostname: "{{ inventory_hostname }}"
-          ansible_fqdn: "{{ ansible_facts.fqdn | default('N/A') }}"
-          cpu_cores: "{{ ansible_facts.processor_cores | default('N/A') }}"
-          memory_mb: "{{ ansible_facts.memtotal_mb | default('N/A') }}"
-          disk_size_gb: >-
-            {{
-              (ansible_facts.devices | default({}) | dict2items
-              | selectattr('value.sectors', 'defined')
-              | map(attribute='value.sectors')
-              | map('int')
-              | sum // 2048 // 1024) | default(0)
-            }}
-
-- name: Save CSV on PC-003 desktop
-  hosts: PC-003
+- name: Extraer info hardware completa y guardar en un JSON por host
+  hosts: windows
   gather_facts: no
-
-  vars:
-    csv_path: "C:/Users/{{ ansible_user }}/Desktop/hardware_report.csv"
-
   tasks:
-    - name: Collect hw_info from all hosts
-      set_fact:
-        all_hw_info: "{{ groups['all'] | map('extract', hostvars, 'hw_info') | list }}"
-
-    - name: Write hardware info to CSV using PowerShell
+    - name: Obtener info CPU
       win_shell: |
-        $csvPath = "{{ csv_path }}"
-        $allData = @(
-          {% for item in all_hw_info %}
-          [pscustomobject]@{
-            Hostname = '{{ item.hostname }}'
-            FQDN = '{{ item.ansible_fqdn }}'
-            CPUCores = '{{ item.cpu_cores }}'
-            MemoryMB = '{{ item.memory_mb }}'
-            DiskSizeGB = '{{ item.disk_size_gb }}'
+        Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,MaxClockSpeed | ConvertTo-Json -Depth 5
+      register: cpu_info
+
+    - name: Obtener info RAM
+      win_shell: |
+        Get-CimInstance Win32_PhysicalMemory | Select-Object Capacity,Speed,Manufacturer | ConvertTo-Json -Depth 5
+      register: ram_info
+
+    - name: Obtener info discos
+      win_shell: |
+        Get-CimInstance Win32_DiskDrive | Select-Object Model,Size,InterfaceType | ConvertTo-Json -Depth 5
+      register: disk_info
+
+    - name: Obtener info placa base
+      win_shell: |
+        Get-CimInstance Win32_BaseBoard | Select-Object Manufacturer,Product,SerialNumber | ConvertTo-Json -Depth 5
+      register: baseboard_info
+
+    - name: Crear estructura JSON con toda la info
+      set_fact:
+        hardware_info: |
+          {
+            "CPU": {{ cpu_info.stdout }},
+            "RAM": {{ ram_info.stdout }},
+            "Discos": {{ disk_info.stdout }},
+            "PlacaBase": {{ baseboard_info.stdout }}
           }
-          {% if not loop.last %}, {% endif %}
-          {% endfor %}
-        )
-        $allData | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
-      args:
-        executable: powershell.exe
+
+    - name: Crear carpeta local para guardar info hardware
+      local_action:
+        module: file
+        path: "./hardware_info"
+        state: directory
+
+    - name: Guardar JSON completo en master
+      copy:
+        content: "{{ hardware_info }}"
+        dest: "./hardware_info/{{ inventory_hostname }}_hardware.json"
+      delegate_to: localhost
