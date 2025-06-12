@@ -1,0 +1,43 @@
+---
+- name: Establecer fondo de pantalla usando variables
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: Comprobar si existe el archivo de fondo
+      win_stat:
+        path: "{{ wallpaper_path }}"
+      register: wallpaper_file
+
+    - name: Abortar si no existe el archivo de fondo
+      fail:
+        msg: "El archivo {{ wallpaper_path }} no existe en el host {{ inventory_hostname }}"
+      when: not wallpaper_file.stat.exists
+
+    - name: Establecer ruta del fondo en el registro
+      win_regedit:
+        path: HKCU:\Control Panel\Desktop
+        name: Wallpaper
+        value: "{{ wallpaper_path }}"
+        type: expandstring
+      when: wallpaper_file.stat.exists
+
+    - name: Establecer estilo de fondo (WallpaperStyle)
+      win_regedit:
+        path: HKCU:\Control Panel\Desktop
+        name: WallpaperStyle
+        value: "{{ wallpaper_style }}"
+        type: string
+      when: wallpaper_file.stat.exists
+
+    - name: Establecer repetición de fondo (TileWallpaper)
+      win_regedit:
+        path: HKCU:\Control Panel\Desktop
+        name: TileWallpaper
+        value: "{{ tile_wallpaper }}"
+        type: string
+      when: wallpaper_file.stat.exists
+
+    - name: Forzar actualización del fondo
+      win_shell: |
+        RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters
+      when: wallpaper_file.stat.exists
