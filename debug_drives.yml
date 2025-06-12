@@ -1,12 +1,23 @@
 ---
-- name: Comprobar drives en host Windows
-  hosts: all
+- name: Testear mapeo de unidad R desde NAS Synology
+  hosts: windows
   gather_facts: no
 
   tasks:
-    - name: Listar drives lógicos en el host remoto (WinRM)
-      win_shell: powershell -command "Get-PSDrive -PSProvider FileSystem | Select-Object Name,Root | ConvertTo-Json"
-      register: drives
+    - name: Mapear unidad R:
+      win_shell: >
+        net use R: "\\{{ nas_ip }}\{{ nas_share }}" /user:{{ nas_user }} {{ nas_password }} /persistent:no
+      register: net_use_output
+      changed_when: false
 
-    - debug:
-        var: drives.stdout
+    - name: Mostrar salida de net use
+      debug:
+        var: net_use_output.stdout_lines
+
+    - name: Listar archivos en R:\
+      win_shell: dir R:\
+      register: listado_R
+
+    - name: Mostrar contenido de R:\
+      debug:
+        var: listado_R.stdout_lines
