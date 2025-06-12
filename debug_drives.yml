@@ -1,7 +1,12 @@
 ---
-- name: Listar drives lógicos en el host remoto (WinRM)
-  win_shell: powershell -command "Get-PSDrive -PSProvider FileSystem | Select-Object Name,Root | ConvertTo-Json"
-  register: drives
+- name: Comprobar drives en host Windows
+  hosts: all
+  gather_facts: no
 
-- debug:
-    var: drives.stdout
+  tasks:
+    - name: Listar drives lógicos en el host remoto (WinRM)
+      win_shell: powershell -command "Get-PSDrive -PSProvider FileSystem | Select-Object Name,Root | ConvertTo-Json"
+      register: drives
+
+    - debug:
+        var: drives.stdout
