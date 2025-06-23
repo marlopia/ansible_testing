@@ -1,0 +1,8 @@
+---
+- name: Disable Hibernate on all Windows hosts
+  hosts: windows
+  gather_facts: no
+  tasks:
+    - name: Run powercfg to disable hibernate
+      ansible.windows.win_shell: 
+        cmd: powercfg.exe /hibernate off
