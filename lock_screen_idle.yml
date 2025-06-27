@@ -13,12 +13,6 @@
     - name: Apagar pantalla tras 15 min (DC)
       ansible.windows.win_shell: powercfg /change monitor-timeout-dc 15
 
-    - name: Establecer tiempo de inactividad para suspensión no atendida (AC)
-      ansible.windows.win_shell: powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP UNATTEND_SLEEP_TIMEOUT 900
-
-    - name: Establecer tiempo de inactividad para suspensión no atendida (DC)
-      ansible.windows.win_shell: powercfg /setdcvalueindex SCHEME_CURRENT SUB_SLEEP UNATTEND_SLEEP_TIMEOUT 900
-
     - name: Requerir contraseña al reanudar (AC)
       ansible.windows.win_shell: powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1
 
