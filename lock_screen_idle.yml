@@ -1,0 +1,36 @@
+---
+- name: Configurar bloqueo de pantalla y ahorro de energía en Windows
+  hosts: windows
+  gather_facts: no
+  tasks:
+
+    - name: Desactivar hibernación
+      ansible.windows.win_shell: powercfg.exe /hibernate off
+
+    - name: Apagar pantalla tras 15 min (AC)
+      ansible.windows.win_shell: powercfg /change monitor-timeout-ac 15
+
+    - name: Apagar pantalla tras 15 min (DC)
+      ansible.windows.win_shell: powercfg /change monitor-timeout-dc 15
+
+    - name: Establecer tiempo de inactividad para suspensión no atendida (AC)
+      ansible.windows.win_shell: powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP UNATTEND_SLEEP_TIMEOUT 900
+
+    - name: Establecer tiempo de inactividad para suspensión no atendida (DC)
+      ansible.windows.win_shell: powercfg /setdcvalueindex SCHEME_CURRENT SUB_SLEEP UNATTEND_SLEEP_TIMEOUT 900
+
+    - name: Requerir contraseña al reanudar (AC)
+      ansible.windows.win_shell: powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1
+
+    - name: Requerir contraseña al reanudar (DC)
+      ansible.windows.win_shell: powercfg /setdcvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1
+
+    - name: Forzar bloqueo de sesión tras 15 min de inactividad (registro)
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+        name: InactivityTimeoutSecs
+        data: 900
+        type: dword
+
+    - name: Aplicar el esquema de energía actual
+      ansible.windows.win_shell: powercfg /setactive SCHEME_CURRENT
